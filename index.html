@@ -6,6 +6,7 @@
 	<title></title>
 	<style type="text/css">
       canvas { border: 1px solid black; }
+
     </style>
 	<img id="rt" src="rt.png" style="display: none;">
 	<img id="bt" src="bt.png" style="display: none;">
@@ -131,7 +132,7 @@
 								if(players[0].place_troops(board.nodelist[i],boardPos.RposArray[chipInMotion][2])){
 									boardPos.RposArray[chipInMotion][0] =x2;
 									boardPos.RposArray[chipInMotion][1] =y2;
-							        board.Udisplay();
+							        
 							        boardPos.RposArray[chipInMotion][3] = i;
 							        itemClicked = false;
 							        chipInMotion = -1;
@@ -140,6 +141,7 @@
 							        if(players[0].available_troops == 0){
 							        	redTurn = false;
 							        }
+							        board.Udisplay();
 						        }
 							}
 						}
@@ -157,7 +159,7 @@
 								if(players[1].place_troops(board.nodelist[i],boardPos.BposArray[chipInMotion][2])){
 									boardPos.BposArray[chipInMotion][0] =x2;
 									boardPos.BposArray[chipInMotion][1] =y2;
-							        board.Udisplay();
+							        
 							        boardPos.BposArray[chipInMotion][3] = i;
 							        itemClicked = false;
 							        chipInMotion = -1;
@@ -167,6 +169,7 @@
 							        	redTurn = true;
 							        	stage1 = false;
 							        }
+							        board.Udisplay();
 							    }
 							}
 						}
@@ -189,12 +192,14 @@
 									boardPos.RposArray[chipInMotion][1] =y2;
 									boardPos.RposArray[chipInMotion][3] = i;
 									board.battle();
-							        board.Udisplay();
+							        
 						        
 							        chipInMotion = -1;			       
 							        redTurn = false;							        
 						    		}
+
 						    	itemClicked = false;
+						    	board.Udisplay();
 							}
 						}
 					}
@@ -213,13 +218,14 @@
 									boardPos.BposArray[chipInMotion][1] =y2;
 									boardPos.BposArray[chipInMotion][3] = i;
 									board.battle();
-							        board.Udisplay();
+							        
 					        
 							        chipInMotion = -1;					       
 							        redTurn = true;						     		
 							        }
 						    	
 						    	itemClicked = false;
+						    	board.Udisplay();
 							}
 						}
 					}
@@ -398,6 +404,14 @@
 		ctx.fillStyle = "blue";
 		ctx.fillText("Blue:"+players[1].numtroops,350,750);
 
+		if(redTurn == true){
+			ctx.fillStyle = "red";
+			ctx.fillText("Turn : RED ",620,720);
+		}
+		else{
+			ctx.fillStyle = "blue";
+			ctx.fillText("Turn : BLUE ",620,720);
+		}
 		return ctx;
 
 	}
@@ -541,7 +555,27 @@
 	</script>
 </head>
 <body onload="main()">
+<tr>
 	<canvas id="myCanvas" height="800" width="800" onclick="update(event)" onmousedown= "updateD(event)" onmousemove = "updateM(event)" onmouseup = "updateU(event)"></canvas>
+</tr>
 
+<tr>
+<h3>  Instructions: </h3>
+<h4>Game Mode : Search and Destroy! </h4>
+<h4>Goal: Kill all the enemy troops while loosing as few of your own as possible! </h4>
+
+<h4> How to Play: </h4>
+<ul>
+<li> Red plays first and keeps his chips on cells in the first two columns. To keep a chip <br>
+click once on a red chip, then click on a empty cell in the first two columns.</li>
+<li> Blue then does the same and keeps his chips on cells in the last two columns.</li>
+<li> Now Red and Blue take turns and move 1 chip in each turn. A chip can only be moved to a neighboring node.</li>
+<li> When two chips of different colors land on the same node, the one with lesser strength gets annhilated. <br>
+If both are the same strength, both get annhilated.
+</ul>
+
+
+
+</tr>
 </body>
 </html>

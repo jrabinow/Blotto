@@ -191,7 +191,7 @@
 									boardPos.RposArray[chipInMotion][0] =x2;
 									boardPos.RposArray[chipInMotion][1] =y2;
 									boardPos.RposArray[chipInMotion][3] = i;
-									board.battle();
+									board.battle(chipInMotion,i,0);
 							        
 						        
 							        chipInMotion = -1;			       
@@ -217,7 +217,7 @@
 									boardPos.BposArray[chipInMotion][0] =x2;
 									boardPos.BposArray[chipInMotion][1] =y2;
 									boardPos.BposArray[chipInMotion][3] = i;
-									board.battle();
+									board.battle(chipInMotion,i,1);
 							        
 					        
 							        chipInMotion = -1;					       
@@ -404,16 +404,55 @@
 		ctx.fillStyle = "blue";
 		ctx.fillText("Blue:"+players[1].numtroops,350,750);
 
-		if(redTurn == true){
+		ctx.font = 'bold 20px sans-serif';
+
+		if(players[0].numtroops==0 && boardPos.RposArray[0][4]==false){
+			ctx.fillStyle = "blue";
+			ctx.fillText("BLUE WON with sscore "+players[1].numtroops ,620,720);
+
+		}
+		else if(players[1].numtroops==0 && boardPos.BposArray[0][4]==false){
 			ctx.fillStyle = "red";
-			ctx.fillText("Turn : RED ",620,720);
+			ctx.fillText("RED WON with score "+players[0].numtroops ,620,720);
 		}
 		else{
-			ctx.fillStyle = "blue";
-			ctx.fillText("Turn : BLUE ",620,720);
+			if(redTurn == true){
+				ctx.fillStyle = "red";
+				ctx.fillText("Turn : RED ",620,720);
+			}
+			else{
+				ctx.fillStyle = "blue";
+				ctx.fillText("Turn : BLUE ",620,720);
+			}
 		}
 		return ctx;
 
+	}
+
+	function getWinner(){
+
+		if(players[0].numtroops==0 && boardPos.RposArray[0][4]==false){
+			return "RED";
+
+		}
+		else if(players[1].numtroops==0 && boardPos.BposArray[0][4]==false){
+			return "BLUE";
+		}
+		else{
+			return "No One";
+		}
+
+	}
+
+	function getWinnerScore(){
+		if(getWinner()=="RED"){
+			return players[0].numtroops;
+		}
+		else if(getWinner()=="BLUE"){
+			return players[1].numtroops;
+		}
+		else
+			return 0;
 	}
 
 
@@ -461,26 +500,28 @@
 	
 		ctx.fillStyle = 'red';
 		for(var i=0;i<boardPos.RposArray.length;i++){
-
-	        ctx.beginPath();
-	        var x  = boardPos.RposArray[i][0];            
-	        var y  = boardPos.RposArray[i][1];        
-	        ctx.arc(x, y, boardPos.radius , 0, 2* Math.PI);
-	        ctx.fillText(players[0].chips[i].toString(), x-10, y);
-	        ctx.stroke();  
+			if(boardPos.RposArray[i][4]==true){
+		        ctx.beginPath();
+		        var x  = boardPos.RposArray[i][0];            
+		        var y  = boardPos.RposArray[i][1];        
+		        ctx.arc(x, y, boardPos.radius , 0, 2* Math.PI);
+		        ctx.fillText(players[0].chips[i].toString(), x-10, y);
+		        ctx.stroke();  
+	    	}
 	    	
 	    }
 	
 		
 	   	ctx.fillStyle = 'blue';
 	   	for(var i=0;i<boardPos.BposArray.length;i++){
-
-	        ctx.beginPath();
-	        var x  = boardPos.BposArray[i][0];            
-	        var y  = boardPos.BposArray[i][1];        
-	        ctx.arc(x, y, boardPos.radius , 0, 2* Math.PI);
-	        ctx.fillText(players[1].chips[i].toString(), x-10, y);
-	        ctx.stroke();  
+	   		if(boardPos.BposArray[i][4]==true){
+		        ctx.beginPath();
+		        var x  = boardPos.BposArray[i][0];            
+		        var y  = boardPos.BposArray[i][1];        
+		        ctx.arc(x, y, boardPos.radius , 0, 2* Math.PI);
+		        ctx.fillText(players[1].chips[i].toString(), x-10, y);
+		        ctx.stroke();  
+	    	}
 	    }
 	    commonDisplay();
 
@@ -511,6 +552,7 @@
 	        ctx.stroke();
 
 	        boardPos.RposArray[i*3+j] =  [x,y,players[0].chips[i*3+j]];
+	        boardPos.RposArray[i*3+j][4] = true;
 
 	      }
 	    }
@@ -529,6 +571,7 @@
 	        ctx.stroke();
 	        
 	        boardPos.BposArray[i*3+j] =  [x,y,players[1].chips[i*3+j]];
+	        boardPos.BposArray[i*3+j][4] = true;
 	      }
 	    }
 	 

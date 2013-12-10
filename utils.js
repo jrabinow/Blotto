@@ -131,22 +131,84 @@ this.players = null;
 }
 
 
-Board.prototype.battle = function(){
+Board.prototype.battle = function(cM ,i,j){
+
+   var node = board.nodelist[i];
+   if(node.troops[(j+1)%2]!=0){
+
+      if(node.troops[0]>node.troops[1]){
+          this.players[1].numtroops -= node.troops[1];
+          node.troops[1] = 0;
+
+          for(var j=0;j<boardPos.BposArray.length;j++){
+            if(boardPos.BposArray[j][3]==i){
+              boardPos.BposArray[j][2] =0;
+              boardPos.BposArray[j][4]=false;
+              
+            }
+          }
+        }
+      else {
+              if(node.troops[0]<node.troops[1]){
+              this.players[0].numtroops -= node.troops[0];
+              node.troops[0] = 0;
+              
+              for(var j=0;j<boardPos.RposArray.length;j++){
+                if(boardPos.RposArray[j][3]==i){
+
+                  boardPos.BposArray[j][2]=0;
+                  boardPos.RposArray[j][4]=false;
+                  
+                }
+              }
+            }
+            else{
+                      if(node.troops[0]!=0 && node.troops[1]!=0){
+                      this.players[1].numtroops -= node.troops[1];
+                      node.troops[1] = 0;
+                      this.players[0].numtroops -= node.troops[0];
+                      node.troops[0] = 0;
+
+                      for(var j=0;j<boardPos.BposArray.length;j++){
+                        if(boardPos.BposArray[j][3]==i){
+                        boardPos.BposArray[j][2]=0;
+                        boardPos.BposArray[j][4]=false;
+                         
+                        }
+                      }
+                      
+                      for(var j=0;j<boardPos.RposArray.length;j++){
+                        if(boardPos.RposArray[j][3]==i){
+                          boardPos.RposArray[j][2]=0;
+                          boardPos.RposArray[j][4]=false;
+                          
+                        }
+                      }
+                    }
+          }
+
+    }
+  
+  }
+}
+
+
+
+Board.prototype.battle3 = function(){
    for(var k=0;k< boardPos.RposArray.length;k++){
     var i = boardPos.RposArray[k][3];
     var node = board.nodelist[i];
-    var l1 =boardPos.RposArray.length;
-    var l2 =boardPos.BposArray.length;
+   
     if(node.troops[0]!=0 && node.troops[1]!=0){
         if(node.troops[0]>node.troops[1]){
           this.players[1].numtroops -= node.troops[1];
           node.troops[1] = 0;
 
-          for(var j=0;j<l2;j++){
+          for(var j=0;j<boardPos.BposArray.length;j++){
             if(boardPos.BposArray[j][3]==i){
 
-              boardPos.BposArray.remove(j);
-              break;
+              boardPos.BposArray.splice(j,1);
+              
             }
           }
         }
@@ -154,34 +216,34 @@ Board.prototype.battle = function(){
           this.players[0].numtroops -= node.troops[0];
           node.troops[0] = 0;
           
-          for(var j=0;j<l1;j++){
+          for(var j=0;j<boardPos.RposArray.length;j++){
             if(boardPos.RposArray[j][3]==i){
 
  
-              boardPos.RposArray.remove(j);
-              break;
+              boardPos.RposArray.splice(j,1);
+              
             }
           }
         }
-        if(node.troops[0]==node.troops[1]){
+        if(node.troops[0]!=0 && node.troops[1]!=0){
           this.players[1].numtroops -= node.troops[1];
           node.troops[1] = 0;
           this.players[0].numtroops -= node.troops[0];
           node.troops[0] = 0;
 
-          for(var j=0;j<l2;j++){
+          for(var j=0;j<boardPos.BposArray.length;j++){
             if(boardPos.BposArray[j][3]==i){
     
-             boardPos.BposArray.remove(j);
-             break;
+            boardPos.BposArray.splice(j,1);
+             
             }
           }
           
-          for(var j=0;j<l1;j++){
+          for(var j=0;j<boardPos.RposArray.length;j++){
             if(boardPos.RposArray[j][3]==i){
 
-              boardPos.RposArray.remove(j);
-              break;
+              boardPos.RposArray.splice(j,1);
+              
             }
           }
         }

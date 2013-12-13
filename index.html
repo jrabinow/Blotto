@@ -61,10 +61,11 @@
 							var x2 = boardPos.RposArray[i][0];
 							var y2 = boardPos.RposArray[i][1];
 
-							if (dist(x2,y2,x,y) <boardPos.radius && boardPos.RposArray[i][4] == true) {
+							if (dist(x2,y2,x,y) <boardPos.radius && boardPos.RposArray[i][4] == true && boardPos.RposArray[i][5]==false) {
 								console.log(boardPos.RposArray.length);
 						        itemClicked = true;
 						        chipInMotion = i;
+
 
 							}
 						}
@@ -75,7 +76,7 @@
 							var x2 = boardPos.BposArray[i][0];
 							var y2 = boardPos.BposArray[i][1];
 
-							if (dist(x2,y2,x,y) <boardPos.radius && boardPos.BposArray[i][4] == true) {
+							if (dist(x2,y2,x,y) <boardPos.radius && boardPos.BposArray[i][4] == true && boardPos.RposArray[i][5]==false) {
 								
 						        itemClicked = true;
 						        chipInMotion = i;
@@ -135,6 +136,7 @@
 									boardPos.RposArray[chipInMotion][1] =y2;
 							        
 							        boardPos.RposArray[chipInMotion][3] = i;
+							        boardPos.RposArray[chipInMotion][5]=true;
 							        itemClicked = false;
 							        chipInMotion = -1;
 							        
@@ -160,7 +162,7 @@
 								if(players[1].place_troops(board.nodelist[i],boardPos.BposArray[chipInMotion][2])){
 									boardPos.BposArray[chipInMotion][0] =x2;
 									boardPos.BposArray[chipInMotion][1] =y2;
-							        
+							        boardPos.BposArray[chipInMotion][5]=true;
 							        boardPos.BposArray[chipInMotion][3] = i;
 							        itemClicked = false;
 							        chipInMotion = -1;
@@ -557,6 +559,7 @@
 
 	        boardPos.RposArray[i*3+j] =  [x,y,players[0].chips[i*3+j]];
 	        boardPos.RposArray[i*3+j][4] = true;
+	        boardPos.RposArray[i*3+j][5] = false;
 	        boardPos.RposArray[i*3+j][3] = -1;
 
 	      }
@@ -577,7 +580,8 @@
 	        
 	        boardPos.BposArray[i*3+j] =  [x,y,players[1].chips[i*3+j]];
 	        boardPos.BposArray[i*3+j][4] = true;
-	        boardPos.RposArray[i*3+j][3] = -1;
+	        boardPos.BposArray[i*3+j][5] = false;
+	        boardPos.BposArray[i*3+j][3] = -1;
 	      }
 	    }
 	 

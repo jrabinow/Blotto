@@ -60,7 +60,7 @@
 							var x2 = boardPos.RposArray[i][0];
 							var y2 = boardPos.RposArray[i][1];
 
-							if (dist(x2,y2,x,y) <boardPos.radius) {
+							if (dist(x2,y2,x,y) <boardPos.radius && boardPos.RposArray[i][4] == true) {
 								console.log(boardPos.RposArray.length);
 						        itemClicked = true;
 						        chipInMotion = i;
@@ -74,7 +74,7 @@
 							var x2 = boardPos.BposArray[i][0];
 							var y2 = boardPos.BposArray[i][1];
 
-							if (dist(x2,y2,x,y) <boardPos.radius) {
+							if (dist(x2,y2,x,y) <boardPos.radius && boardPos.BposArray[i][4] == true) {
 								
 						        itemClicked = true;
 						        chipInMotion = i;
@@ -91,7 +91,7 @@
 							var x2 = boardPos.RposArray[i][0];
 							var y2 = boardPos.RposArray[i][1];
 
-							if (dist(x2,y2,x,y) <boardPos.radius) {
+							if (dist(x2,y2,x,y) <boardPos.radius && boardPos.RposArray[i][4] == true) {
 								
 						        itemClicked = true;
 						        chipInMotion = i;
@@ -105,7 +105,7 @@
 							var x2 = boardPos.BposArray[i][0];
 							var y2 = boardPos.BposArray[i][1];
 
-							if (dist(x2,y2,x,y) <boardPos.radius) {
+							if (dist(x2,y2,x,y) <boardPos.radius && boardPos.BposArray[i][4] == true) {
 								
 						        itemClicked = true;
 						        chipInMotion = i;
@@ -126,7 +126,7 @@
 							var y2 = boardPos.posArray[i][1];
 
 
-							if (dist(x2,y2,x,y) <boardPos.radius) {
+							if (dist(x2,y2,x,y) <boardPos.radius ) {
 								
 								
 								if(players[0].place_troops(board.nodelist[i],boardPos.RposArray[chipInMotion][2])){
@@ -324,6 +324,8 @@
 
 	function commonDisplay(){
 
+		document.getElementsByTagName('table')[0].style.width = screen.width;
+
 		var canvas = document.getElementById('myCanvas');
 		var ctx= canvas.getContext('2d');	
 
@@ -408,12 +410,13 @@
 
 		if(players[0].numtroops==0 && boardPos.RposArray[0][4]==false){
 			ctx.fillStyle = "blue";
-			ctx.fillText("BLUE WON with sscore "+players[1].numtroops ,620,720);
-
+			ctx.fillText("BLUE WON with",620,710);
+			ctx.fillText(" score "+players[1].numtroops ,620,740);			
 		}
 		else if(players[1].numtroops==0 && boardPos.BposArray[0][4]==false){
 			ctx.fillStyle = "red";
-			ctx.fillText("RED WON with score "+players[0].numtroops ,620,720);
+			ctx.fillText("RED WON with",620,710);
+			ctx.fillText(" score "+players[0].numtroops ,620,740);	
 		}
 		else{
 			if(redTurn == true){
@@ -553,6 +556,7 @@
 
 	        boardPos.RposArray[i*3+j] =  [x,y,players[0].chips[i*3+j]];
 	        boardPos.RposArray[i*3+j][4] = true;
+	        boardPos.RposArray[i*3+j][3] = -1;
 
 	      }
 	    }
@@ -572,6 +576,7 @@
 	        
 	        boardPos.BposArray[i*3+j] =  [x,y,players[1].chips[i*3+j]];
 	        boardPos.BposArray[i*3+j][4] = true;
+	        boardPos.RposArray[i*3+j][3] = -1;
 	      }
 	    }
 	 
@@ -598,11 +603,13 @@
 	</script>
 </head>
 <body onload="main()">
+<table border="1">
 <tr>
-	<canvas id="myCanvas" height="800" width="800" onclick="update(event)" onmousedown= "updateD(event)" onmousemove = "updateM(event)" onmouseup = "updateU(event)"></canvas>
-</tr>
+<td valign="top">
+	<canvas id="myCanvas" height="800" width="800" onclick="update(event)"></canvas>
+</td>
 
-<tr>
+<td>
 <h3>  Instructions: </h3>
 <h4>Game Mode : Search and Destroy! </h4>
 <h4>Goal: Kill all the enemy troops while loosing as few of your own as possible! </h4>
@@ -614,11 +621,12 @@ click once on a red chip, then click on a empty cell in the first two columns.</
 <li> Blue then does the same and keeps his chips on cells in the last two columns.</li>
 <li> Now Red and Blue take turns and move 1 chip in each turn. A chip can only be moved to a neighboring node.</li>
 <li> When two chips of different colors land on the same node, the one with lesser strength gets annhilated. <br>
-If both are the same strength, both get annhilated.
+If both are the same strength, both get annhilated.</li>
 </ul>
 
-
+</td>
 
 </tr>
+</table>
 </body>
 </html>

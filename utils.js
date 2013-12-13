@@ -131,10 +131,10 @@ this.players = null;
 }
 
 
-Board.prototype.battle = function(cM ,i,j){
+Board.prototype.battle = function(cM ,i,k){
 
    var node = board.nodelist[i];
-   if(node.troops[(j+1)%2]!=0){
+   if(node.troops[(k+1)%2]!=0){
 
       if(node.troops[0]>node.troops[1]){
           this.players[1].numtroops -= node.troops[1];
@@ -156,7 +156,7 @@ Board.prototype.battle = function(cM ,i,j){
               for(var j=0;j<boardPos.RposArray.length;j++){
                 if(boardPos.RposArray[j][3]==i){
 
-                  boardPos.BposArray[j][2]=0;
+                  boardPos.RposArray[j][2]=0;
                   boardPos.RposArray[j][4]=false;
                   
                 }
@@ -191,104 +191,6 @@ Board.prototype.battle = function(cM ,i,j){
   
   }
 }
-
-
-
-Board.prototype.battle3 = function(){
-   for(var k=0;k< boardPos.RposArray.length;k++){
-    var i = boardPos.RposArray[k][3];
-    var node = board.nodelist[i];
-   
-    if(node.troops[0]!=0 && node.troops[1]!=0){
-        if(node.troops[0]>node.troops[1]){
-          this.players[1].numtroops -= node.troops[1];
-          node.troops[1] = 0;
-
-          for(var j=0;j<boardPos.BposArray.length;j++){
-            if(boardPos.BposArray[j][3]==i){
-
-              boardPos.BposArray.splice(j,1);
-              
-            }
-          }
-        }
-        if(node.troops[0]<node.troops[1]){
-          this.players[0].numtroops -= node.troops[0];
-          node.troops[0] = 0;
-          
-          for(var j=0;j<boardPos.RposArray.length;j++){
-            if(boardPos.RposArray[j][3]==i){
-
- 
-              boardPos.RposArray.splice(j,1);
-              
-            }
-          }
-        }
-        if(node.troops[0]!=0 && node.troops[1]!=0){
-          this.players[1].numtroops -= node.troops[1];
-          node.troops[1] = 0;
-          this.players[0].numtroops -= node.troops[0];
-          node.troops[0] = 0;
-
-          for(var j=0;j<boardPos.BposArray.length;j++){
-            if(boardPos.BposArray[j][3]==i){
-    
-            boardPos.BposArray.splice(j,1);
-             
-            }
-          }
-          
-          for(var j=0;j<boardPos.RposArray.length;j++){
-            if(boardPos.RposArray[j][3]==i){
-
-              boardPos.RposArray.splice(j,1);
-              
-            }
-          }
-        }
-      break;
-    }
-  }
-}
-
-
-
-Board.prototype.battle2 = function(){
-for(var node in this.nodelist) {
-var owner = node.owner;
-var tie = false;
-/* Find out who owns the node */
-for(var i = 1; i < this.players.length; i++)
-if(owner == Owner.NEUTRAL || node.troops[i] > node.troops[owner]) {
-owner = i;
-tie = false;
-} else if(node.troops[i] == node.troops[owner])
-tie = true;
-
-/* kill off everyone else on this node and clean up dead players */
-if(owner != Owner.NEUTRAL)
-for(var i = 0; i < this.players.length; i++)
-if(i == owner && ! tie)
-continue;
-else {
-this.players[i].numtroops -= node.troops[i];
-node.troops[i] = 0;
-
-/* update board to remove players who lost */
-if(this.players[i].capital == node || this.players[i].numtroops == 0) {
-alert("Player " + this.players[i].id + " lost :(");
-for(var n in this.players[i].controlled_nodes) {
-n.owner = owner;
-this.players[owner].controlled_nodes.push(n);
-}
-this.players.splice(this.players.indexOf(this.players[i]), 1);
-}
-}
-}
-}
-
-
 
 Board.prototype.generate_chips = function(numNodes){
 

@@ -21,6 +21,82 @@ function dist(x1, y1, x2, y2)
 	return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 };
 
+function itemNotClicked_stage1(boardpos_array)
+{
+	for(var i = 0; i < boardpos_array.length; i++) {
+		var x2 = boardpos_array[i][0];
+		var y2 = boardpos_array[i][1];
+
+		if(dist(x2, y2, x, y) < boardPos.radius
+				&& boardpos_array[i][4] == true
+				&& boardpos_array[i][5] == false) {
+			console.log(boardpos_array.length);
+			itemClicked = true;
+			chipInMotion = i;
+		}
+	}
+}
+
+function itemClicked_stage1(player, boardpos_array, start, end)
+{
+	for(var i = start; i < end; i++) {
+		var x2 = boardPos.posArray[i][0];
+		var y2 = boardPos.posArray[i][1];
+
+		if(dist(x2, y2, x, y) < boardPos.radius ) {
+			if(player.place_troops(board.nodelist[i], boardpos_array[chipInMotion][2])) {
+				boardpos_array[chipInMotion][0] = x2;
+				boardpos_array[chipInMotion][1] = y2;
+				boardpos_array[chipInMotion][3] = i;
+				boardpos_array[chipInMotion][5] = true;
+				itemClicked = false;
+				chipInMotion = -1;
+
+				if(player.available_troops == 0)
+					redTurn = !redTurn;
+				board.Udisplay();
+			}
+		}
+	}
+}
+
+function itemNotClicked_stage2(boardpos_array)
+{
+	for(var i = 0; i < boardpos_array.length; i++) {
+		var x2 = boardpos_array[i][0];
+		var y2 = boardpos_array[i][1];
+
+		if(dist(x2, y2, x, y) < boardPos.radius && boardpos_array[i][4] == true) {
+			itemClicked = true;
+			chipInMotion = i;
+		}
+	}
+}
+
+
+function itemClicked_stage2(player, boardpos_array)
+{
+	for(var i = 0; i < 30; i++) {
+		var x2 = boardPos.posArray[i][0];
+		var y2 = boardPos.posArray[i][1];
+
+		if(dist(x2, y2, x, y) < boardPos.radius) {
+			if(players[1].movetroops(board.nodelist[boardpos_array[chipInMotion][3]],
+						board.nodelist[i],
+						boardpos_array[chipInMotion][2])) {
+				boardpos_array[chipInMotion][0] = x2;
+				boardpos_arrayboardPos.BposArray[chipInMotion][1] = y2;
+				boardpos_array[chipInMotion][3] = i;
+				board.battle(chipInMotion, i, 1);
+				chipInMotion = -1;
+				redTurn = !redTurn;
+			}
+			itemClicked = false;
+			board.Udisplay();
+		}
+	}
+}
+
 function update(event)
 {
 	var canvas = document.getElementById('myCanvas');
@@ -32,145 +108,28 @@ function update(event)
 	if(itemClicked == false) {
 		if(stage1) {
 			if(redTurn)
-				for (var i = 0; i < boardPos.RposArray.length; i++) {
-					var x2 = boardPos.RposArray[i][0];
-					var y2 = boardPos.RposArray[i][1];
-
-					if (dist(x2, y2, x, y) < boardPos.radius
-							&& boardPos.RposArray[i][4] == true
-							&& boardPos.RposArray[i][5] == false) {
-						console.log(boardPos.RposArray.length);
-						itemClicked = true;
-						chipInMotion = i;
-					}
-				}
+				itemNotClicked_stage1(boardpos.RposArray);
 			else
-				for (var i = 0; i < boardPos.BposArray.length; i++) {
-					var x2 = boardPos.BposArray[i][0];
-					var y2 = boardPos.BposArray[i][1];
-
-					if (dist(x2, y2, x, y) < boardPos.radius
-							&& boardPos.BposArray[i][4] == true
-							&& boardPos.BposArray[i][5] == false) {
-						itemClicked = true;
-						chipInMotion = i;
-					}
-				}
+				itemNotClicked_stage1(boardpos.BposArray);
 		} else {
 			if(redTurn)
-				for (var i = 0; i < boardPos.RposArray.length; i++) {
-					var x2 = boardPos.RposArray[i][0];
-					var y2 = boardPos.RposArray[i][1];
-
-					if (dist(x2, y2, x, y) < boardPos.radius
-							&& boardPos.RposArray[i][4] == true) {
-						itemClicked = true;
-						chipInMotion = i;
-					}
-				}
+				itemNotClicked_stage2(boardpos.RposArray);
 			else
-				for (var i = 0; i < boardPos.BposArray.length; i++) {
-					var x2 = boardPos.BposArray[i][0];
-					var y2 = boardPos.BposArray[i][1];
-
-					if (dist(x2, y2, x, y) <boardPos.radius
-							&& boardPos.BposArray[i][4] == true) {
-						itemClicked = true;
-						chipInMotion = i;
-					}
-				}
+				itemNotClicked_stage2(boardpos.BposArray);
 		}
 	} else {
 		if(stage1) {
-			if(redTurn) {
-				for (var i = 0; i < 10; i++) {
-					var x2 = boardPos.posArray[i][0];
-					var y2 = boardPos.posArray[i][1];
-
-					if (dist(x2, y2, x, y) < boardPos.radius ) {
-						if(players[0].place_troops(board.nodelist[i], boardPos.RposArray[chipInMotion][2])) {
-							boardPos.RposArray[chipInMotion][0] = x2;
-							boardPos.RposArray[chipInMotion][1] = y2;
-
-							boardPos.RposArray[chipInMotion][3] = i;
-							boardPos.RposArray[chipInMotion][5] = true;
-							itemClicked = false;
-							chipInMotion = -1;
-
-							if(players[0].available_troops == 0) {
-								redTurn = false;
-							}
-							board.Udisplay();
-						}
-					}
-				}
-			} else {
-				for (var i = 20; i < 30; i++) {
-					var x2 = boardPos.posArray[i][0];
-					var y2 = boardPos.posArray[i][1];
-
-					if (dist(x2, y2, x, y) <boardPos.radius) {
-						console.log(board.nodelist.toString);
-						if(players[1].place_troops(board.nodelist[i], boardPos.BposArray[chipInMotion][2])) {
-							boardPos.BposArray[chipInMotion][0] =x2;
-							boardPos.BposArray[chipInMotion][1] =y2;
-							boardPos.BposArray[chipInMotion][5]=true;
-							boardPos.BposArray[chipInMotion][3] = i;
-							itemClicked = false;
-							chipInMotion = -1;
-
-							//alert(players[1].available_troops);
-							if(players[1].available_troops == 0) {
-								redTurn = true;
-								stage1 = false;
-							}
-							board.Udisplay();
-						}
-					}
-				}
+			if(redTurn)
+				itemClicked_stage1(players[0], boardPos.RposArray, 0, 10);
+			else {
+				itemClicked_stage1(players[0], boardPos.RposArray, 20, 30);
+				stage1 = false;
 			}
 		} else {
-			if(redTurn) {
-				for (var i = 0; i < 30; i++) {
-					var x2 = boardPos.posArray[i][0];
-					var y2 = boardPos.posArray[i][1];
-
-					if (dist(x2, y2, x, y) < boardPos.radius) {
-						if(players[0].movetroops(board.nodelist[boardPos.RposArray[ chipInMotion][3]],
-									board.nodelist[i],
-									boardPos.RposArray[chipInMotion][2])) {
-							boardPos.RposArray[chipInMotion][0] = x2;
-							boardPos.RposArray[chipInMotion][1] = y2;
-							boardPos.RposArray[chipInMotion][3] = i;
-							board.battle(chipInMotion, i, 0);
-							chipInMotion = -1;
-							redTurn = false;
-						}
-						itemClicked = false;
-						board.Udisplay();
-					}
-				}
-			} else {
-				for (var i = 0; i < 30; i++) {
-					var x2 = boardPos.posArray[i][0];
-					var y2 = boardPos.posArray[i][1];
-
-					if (dist(x2, y2, x, y) < boardPos.radius) {
-						if(players[1].movetroops(board.nodelist[boardPos.BposArray[chipInMotion][3]],
-									board.nodelist[i],
-									boardPos.BposArray[chipInMotion][2])) {
-							boardPos.BposArray[chipInMotion][0] = x2;
-							boardPos.BposArray[chipInMotion][1] = y2;
-							boardPos.BposArray[chipInMotion][3] = i;
-							board.battle(chipInMotion, i, 1);
-							chipInMotion = -1;
-							redTurn = true;
-						}
-						itemClicked = false;
-						board.Udisplay();
-					}
-				}
-			}
+			if(redTurn)
+				itemClicked_stage2(player[1], boardPos.BposArray);
+			else
+				itemClicked_stage2(player[1], boardPos.BposArray);
 		}
 	}
 };
@@ -213,8 +172,8 @@ function commonDisplay()
 	ctx.globalCompositeOperation="destination-over";
 	ctx.beginPath();
 
-	for (var i = 0; i < board.nodelist.length; i++) {
-		for (var j = 0; j < board.nodelist[i].neighbor_list.length; j++) {
+	for(var i = 0; i < board.nodelist.length; i++) {
+		for(var j = 0; j < board.nodelist[i].neighbor_list.length; j++) {
 			ctx.moveTo(boardPos.posArray[board.nodelist[i].id][0],
 					boardPos.posArray[board.nodelist[i].id][1]);
 			ctx.lineTo(boardPos.posArray[board.nodelist[i].neighbor_list[j].id][0],

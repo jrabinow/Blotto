@@ -36,6 +36,11 @@ function Node(lvl, id)
 	this.neighbor_list = [];
 }
 
+/* Player class constructor. Pass in a player_id (int)
+ * the number of troops (int)
+ * a list of nodes controlled by the player,
+ * a capital node,
+ * and a list of chips */
 function Player(id, numtroops, controlled_nodes, capital, chips)
 {
 	this.id = id;
@@ -158,8 +163,7 @@ Board.prototype.battle = function(cM, i, k)
 					boardPos.BposArray[j][4] = false;
 				}
 			}
-		} else {
-			if(node.troops[0] < node.troops[1]) {
+		} else if(node.troops[0] < node.troops[1]) {
 				this.players[0].numtroops -= node.troops[0];
 				node.troops[0] = 0;
 
@@ -169,25 +173,22 @@ Board.prototype.battle = function(cM, i, k)
 						boardPos.RposArray[j][4] = false;
 					}
 				}
-			} else {
-				if(node.troops[0] != 0 && node.troops[1] != 0) {
-					this.players[1].numtroops -= node.troops[1];
-					node.troops[1] = 0;
-					this.players[0].numtroops -= node.troops[0];
-					node.troops[0] = 0;
+		} else if(node.troops[0] != 0 && node.troops[1] != 0) {
+			this.players[1].numtroops -= node.troops[1];
+			node.troops[1] = 0;
+			this.players[0].numtroops -= node.troops[0];
+			node.troops[0] = 0;
 
-					for(var j = 0; j < boardPos.BposArray.length; j++) {
-						if(boardPos.BposArray[j][3] == i) {
-							boardPos.BposArray[j][2] = 0;
-							boardPos.BposArray[j][4] = false;
-						}
-					}
-					for(var j = 0; j < boardPos.RposArray.length; j++) {
-						if(boardPos.RposArray[j][3] == i) {
-							boardPos.RposArray[j][2] = 0;
-							boardPos.RposArray[j][4] = false;
-						}
-					}
+			for(var j = 0; j < boardPos.BposArray.length; j++) {
+				if(boardPos.BposArray[j][3] == i) {
+					boardPos.BposArray[j][2] = 0;
+					boardPos.BposArray[j][4] = false;
+				}
+			}
+			for(var j = 0; j < boardPos.RposArray.length; j++) {
+				if(boardPos.RposArray[j][3] == i) {
+					boardPos.RposArray[j][2] = 0;
+					boardPos.RposArray[j][4] = false;
 				}
 			}
 		}
@@ -202,7 +203,7 @@ Board.prototype.generate_chips = function(numNodes)
 		[ 5, 5, 20, 20, 20, 30 ],
 		[ 5, 10, 15, 20, 30, 20 ],
 		[ 30, 15, 15, 15, 15, 10 ]
-	];
+			];
 
 	var listOfChips = Uchips[ Math.floor( (Math.random() * (numNodes-1))) ];
 	return listOfChips;
@@ -210,6 +211,8 @@ Board.prototype.generate_chips = function(numNodes)
 
 var main = function()
 {
+	Board board = new Board();
+
 	for(var i = 0; i < 2; i++) {
 		players.push(new Player(i, 100, null, null, board.generate_chips(6)));
 		/* TODO: get a capital and a list of nodes from the board */
@@ -229,9 +232,4 @@ var main = function()
 	// n.troops = Array.apply(null, new Array(2)).map(Number.prototype.valueOf, 0);
 
 	board.display();
-
-	// if(board.players.length == 1)
-	// alert("Player " + board.players[0] + " is king of the world.");
-	// else
-	// alert("Everyone loses in a war. People die and no one gets anything out of it.");
 }

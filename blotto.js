@@ -1,293 +1,412 @@
-/* return all elements in a1 not contained in a2 */
-function array_diff(a1, a2)
+var board = new Board();
+var players = [];
+
+function BoardPos()
 {
-	var a = [], diff = [];
-
-	for(var i = 0; i < a1.length; i++)
-		a[a1[i]] = true;
-	for(var i = 0; i < a2.length; i++)
-		if(a[a2[i]])
-			delete a[a2[i]];
-		else
-			a[a2[i]] = true;
-	for(var k in a)
-		diff.push(k);
-	return diff;
-}
-
-/* IE lt 9 sucks -> we define our own indexOf method */
-if( !Array.prototype.indexOf ) {
-	Array.prototype.indexOf = function(needle) {
-		for(var i = 0; i < this.length; i++)
-			if(this[i] === needle)
-				return i;
-		return -1;
-	};
-}
-
-/* typedef enum :-P :-P :-P
- * Legacy code from attacker-defender mode, we should maybe just delete this */
-Owner = {
-	DEFENDER : 0,
-	ATTACKER : 1,
-	NEUTRAL  : 2
-}
-
-/* Node */
-function Node(lvl, id)
-{
-	this.troops = [];
-	this.owner = Owner.NEUTRAL;
-	this.level = lvl;
-	this.id = id;
-	this.neighbor_list = [];
-}
-
-function Player(id, numtroops, controlled_nodes, capital)
-{
-	this.id = id;
-	this.available_troops = numtroops;	/* Troops available for placement */
-	this.numtroops = 0;			/* troops present on the board */
-	this.controlled_nodes = controlled_nodes;
-
-	for(var n in controlled_nodes)
-		n.owner = id;
-	this.capital = capital;
-	this.chips = chips;
-}
-
-Player.prototype.place_troops = function(node, troops)
-{
-	/* TODO: perform some additional checks to see if there aren't
-	 * too many troops already present on node */
-	if(node.owner != this.id || troops > this.available_troops) {
-		alert("You cannot place your troops here!");
-		return false;
-	} else {
-		node.troops[this.id] += troops;
-		this.available_troops -= troops;
-		return true;
-	}
-}
-
-/* TODO: review conditions on moving troops (check for correct levels and so on)
- * once we've finally decided on a set of rules */
-Player.prototype.movetroops = function(startnode, endnode, numtroops)
-{
-	if(startnode.neighbor_list.indexOf(endnode) == -1 ||
-			startnode.troops[this.id] < numtroops) {
-		alert("You cannot move " + numtroops + " troops from node "
-				+ startnode.id + " to node " + endnode.id + "!");
-		return false;
-	} else {
-		startnode.troops[this.id] -= numtroops;
-		endnode.troops[this.id] += numtroops;
-		return true;
-	}
-}
-
-/* Object-oriented programming is very nice, but there's no need to make this
- * function part of the Board class
- * "Floating" functions are just fine too :) */
-function fullGraphGen(depth, nodes_per_level)
-{
-	var lvlNodes = [];
-	var graph = [];
-	var id = 0;
-
-	// for each level generate the number of nodes per level
-	for(var i = 0; i <= depth; i++)
-		lvlNodes.push([ nodes_per_level, [] ]);
-	// elements of the form [ number of nodes per level, array of nodes in level]
-
-	// generate nodes
-	for(var i = 0; i < lvlNodes.length; i++) {
-		for(var j = 1; j <= lvlNodes[i][0]; j++) {
-			var n = new Node(i, id++);
-			graph.push(n);
-			lvlNodes[i][1].push(n);
-		}
-	}
-
-	/* Sorry for the horrible syntax, when I tried to do
-	 * for(var n1 in lvlNodes[i][1]) javascript was screwing up */
-	for(var i = 0; i < depth - 1; i++)
-		/* for(var n1 in lvlNodes[i][1]) */
-		for(var n1 = 0; n1 < lvlNodes[i][1].length; n1++) {
-			/* for(var n2 in lvlNodes[i + 1][1]) {*/
-			for(var n2 = 0; n2 < lvlNodes[i + 1][1].length; n2++) {
-				/* n1.neighbor_list.push(n2);
-				 * n2.neighbor_list.push(n1); */
-				lvlNodes[i][1][n1].neighbor_list.push(lvlNodes[i+1][1][n2]);
-				lvlNodes[i + 1][1][n2].neighbor_list.push(lvlNodes[i][1][n1]);
-			}
-		}
-
-	for(var i = 0; i < graph.length; i++) {
-		numNeighbors = Math.floor( (Math.random() * graph[i].neighbor_list.length) + 1);
-		/* Choose a random index from current neighbors
-		 * delete node at that index from current neighbors
-		 * Connections are 2 ways -> we then delete the current node from the list
-		 * of neighbors of the node we just deleted */
-		while(graph[i].neighbor_list.length > numNeighbors) {
-			var unjoin_index = Math.floor(Math.random() * graph[i].neighbor_list.length);
-			var unjoined = graph[i].neighbor_list[unjoin_index];
-			graph[i].neighbor_list.splice(unjoin_index, 1);
-			unjoined.neighbor_list.splice(unjoined.neighbor_list.indexOf(graph[i]), 1);
-		}
-	}
-	return graph;
-	/* TODO: what might be interesting is to select the capitals in this
-	 * function and return the graph AND the list of capitals */
+	this.posArray = [];
+	this.RposArray = [];
+	this.BposArray = [];
+	this.radius = 20;
 };
 
-function sparseGraphGen(max_depth, max_nodes_per_level)
+var boardPos = new BoardPos();
+var mouseDown = false;
+var itemClicked = false;
+var stage1 = true; //Red and blue put their chips on graph
+var redTurn = true;
+var chipInMotion = -1;
+
+function dist(x1, y1, x2, y2)
 {
-	var lvlNodes = [];
-	// generate the number of levels
-	var numlvl = Math.floor( (Math.random() * max_depth) + 1 );
-	var graph = [];
-	var id = 0;
-
-	// for each level generate the number of nodes per level
-	for(var i = 0; i <= numlvl; i++) {
-		var numNodes = Math.floor( (Math.random() * max_nodes_per_level) + 1 );
-		lvlNodes.push([ nodes_per_level, [] ]);
-	// elements of the form [ number of nodes per level, array of nodes in level]
-	}
-
-	// generate the number of neighbors, per node
-	for(var i = 0; i < lvlNodes.length; i++)
-		for(var j = 1; j <= lvlNodes[i][0]; j++) {
-			var n = new Node(i, id++);
-			graph.push(n);
-			lvlNodes[i][1].push(n);
-		}
-
-	for(var i = 0; i < depth - 1; i++)
-		for(var n1 = 0; n1 < lvlNodes[i][1].length; n1++) {
-			for(var n2 = 0; n2 < lvlNodes[i + 1][1].length; n2++) {
-				/* Sorry for the horrible syntax, when I tried to
-				 * do for(var n1 in lvlNodes...) javascript was screwing up */
-				lvlNodes[i][1][n1].neighbor_list.push(lvlNodes[i+1][1][n2]);
-				lvlNodes[i + 1][1][n2].neighbor_list.push(lvlNodes[i][1][n1]);
-			}
-		}
-
-	// pruning
-	for(var i = 0; i < graph.length; i++) {
-		numNeighbors = Math.floor( (Math.random() * graph[i].neighbor_list.length) + 1);
-		/* Choose a random index from current neighbors
-		 * delete node at that index from current neighbors
-		 * Connections are 2 ways -> we then delete the current node from the list
-		 * of neighbors of the node we just deleted */
-		while(graph[i].neighbor_list.length > numNeighbors) {
-			var unjoin_index = Math.floor(Math.random() * graph[i].neighbor_list.length);
-			var unjoined = graph[i].neighbor_list[unjoin_index];
-			graph[i].neighbor_list.splice(unjoin_index, 1);
-			unjoined.neighbor_list.splice(unjoined.neighbor_list.indexOf(graph[i]), 1);
-		}
-	}
-
-	return graph;	// TODO: Same thing as for fullgraphgen
+	return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 };
 
-function Board(max_depth, max_nodes_per_level)
+function update(event)
 {
-	this.nodelist = fullGraphGen(max_depth, max_nodes_per_level);
-	this.players = null;
-}
+	var canvas = document.getElementById('myCanvas');
+	var ctx = canvas.getContext('2d');
+	var rect = canvas.getBoundingClientRect();
+	var x = event.clientX - rect.left;
+	var y = event.clientY - rect.top;
 
-// TODO: implement me
-Board.prototype.display = function()
-{
-}
+	if(itemClicked == false) {
+		if(stage1) {
+			if(redTurn)
+				for (var i = 0; i < boardPos.RposArray.length; i++) {
+					var x2 = boardPos.RposArray[i][0];
+					var y2 = boardPos.RposArray[i][1];
 
-Board.prototype.battle = function()
-{
-	for(var node in this.nodelist) {
-		var owner = node.owner;
-		var tie = false;
-		/* Find out who owns the node */
-		for(var i = 1; i < this.players.length; i++)
-			if(owner == Owner.NEUTRAL ||
-					node.troops[i] > node.troops[owner]) {
-				owner = i;
-				tie = false;
-			} else if(node.troops[i] == node.troops[owner])
-				tie = true;
-
-		/* kill off everyone else on this node and clean up dead players */
-		if(owner != Owner.NEUTRAL)
-			for(var i = 0; i < this.players.length; i++)
-				if(i == owner && ! tie)
-					continue;
-				else {
-					this.players[i].numtroops -= node.troops[i];
-					node.troops[i] = 0;
-
-					/* update board to remove players who lost */
-					if(this.players[i].capital == node ||
-							this.players[i].numtroops == 0) {
-						alert("Player " + this.players[i].id + " lost :(");
-						for(var n in this.players[i].controlled_nodes) {
-							n.owner = owner;
-							this.players[owner].controlled_nodes.push(n);
-						}
-						this.players.splice(this.players.indexOf(this.players[i]), 1);
+					if (dist(x2, y2, x, y) < boardPos.radius
+							&& boardPos.RposArray[i][4] == true
+							&& boardPos.RposArray[i][5] == false) {
+						console.log(boardPos.RposArray.length);
+						itemClicked = true;
+						chipInMotion = i;
 					}
 				}
+			else
+				for (var i = 0; i < boardPos.BposArray.length; i++) {
+					var x2 = boardPos.BposArray[i][0];
+					var y2 = boardPos.BposArray[i][1];
+
+					if (dist(x2, y2, x, y) < boardPos.radius
+							&& boardPos.BposArray[i][4] == true
+							&& boardPos.BposArray[i][5] == false) {
+						itemClicked = true;
+						chipInMotion = i;
+					}
+				}
+		} else {
+			if(redTurn)
+				for (var i = 0; i < boardPos.RposArray.length; i++) {
+					var x2 = boardPos.RposArray[i][0];
+					var y2 = boardPos.RposArray[i][1];
+
+					if (dist(x2, y2, x, y) < boardPos.radius
+							&& boardPos.RposArray[i][4] == true) {
+						itemClicked = true;
+						chipInMotion = i;
+					}
+				}
+			else
+				for (var i = 0; i < boardPos.BposArray.length; i++) {
+					var x2 = boardPos.BposArray[i][0];
+					var y2 = boardPos.BposArray[i][1];
+
+					if (dist(x2, y2, x, y) <boardPos.radius
+							&& boardPos.BposArray[i][4] == true) {
+						itemClicked = true;
+						chipInMotion = i;
+					}
+				}
+		}
+	} else {
+		if(stage1) {
+			if(redTurn) {
+				for (var i = 0; i < 10; i++) {
+					var x2 = boardPos.posArray[i][0];
+					var y2 = boardPos.posArray[i][1];
+
+					if (dist(x2, y2, x, y) < boardPos.radius ) {
+						if(players[0].place_troops(board.nodelist[i], boardPos.RposArray[chipInMotion][2])) {
+							boardPos.RposArray[chipInMotion][0] = x2;
+							boardPos.RposArray[chipInMotion][1] = y2;
+
+							boardPos.RposArray[chipInMotion][3] = i;
+							boardPos.RposArray[chipInMotion][5] = true;
+							itemClicked = false;
+							chipInMotion = -1;
+
+							if(players[0].available_troops == 0) {
+								redTurn = false;
+							}
+							board.Udisplay();
+						}
+					}
+				}
+			} else {
+				for (var i = 20; i < 30; i++) {
+					var x2 = boardPos.posArray[i][0];
+					var y2 = boardPos.posArray[i][1];
+
+					if (dist(x2, y2, x, y) <boardPos.radius) {
+						console.log(board.nodelist.toString);
+						if(players[1].place_troops(board.nodelist[i], boardPos.BposArray[chipInMotion][2])) {
+							boardPos.BposArray[chipInMotion][0] =x2;
+							boardPos.BposArray[chipInMotion][1] =y2;
+							boardPos.BposArray[chipInMotion][5]=true;
+							boardPos.BposArray[chipInMotion][3] = i;
+							itemClicked = false;
+							chipInMotion = -1;
+
+							//alert(players[1].available_troops);
+							if(players[1].available_troops == 0) {
+								redTurn = true;
+								stage1 = false;
+							}
+							board.Udisplay();
+						}
+					}
+				}
+			}
+		} else {
+			if(redTurn) {
+				for (var i = 0; i < 30; i++) {
+					var x2 = boardPos.posArray[i][0];
+					var y2 = boardPos.posArray[i][1];
+
+					if (dist(x2, y2, x, y) < boardPos.radius) {
+						if(players[0].movetroops(board.nodelist[boardPos.RposArray[ chipInMotion][3]],
+									board.nodelist[i],
+									boardPos.RposArray[chipInMotion][2])) {
+							boardPos.RposArray[chipInMotion][0] = x2;
+							boardPos.RposArray[chipInMotion][1] = y2;
+							boardPos.RposArray[chipInMotion][3] = i;
+							board.battle(chipInMotion, i, 0);
+							chipInMotion = -1;
+							redTurn = false;
+						}
+						itemClicked = false;
+						board.Udisplay();
+					}
+				}
+			} else {
+				for (var i = 0; i < 30; i++) {
+					var x2 = boardPos.posArray[i][0];
+					var y2 = boardPos.posArray[i][1];
+
+					if (dist(x2, y2, x, y) < boardPos.radius) {
+						if(players[1].movetroops(board.nodelist[boardPos.BposArray[chipInMotion][3]],
+									board.nodelist[i],
+									boardPos.BposArray[chipInMotion][2])) {
+							boardPos.BposArray[chipInMotion][0] = x2;
+							boardPos.BposArray[chipInMotion][1] = y2;
+							boardPos.BposArray[chipInMotion][3] = i;
+							board.battle(chipInMotion, i, 1);
+							chipInMotion = -1;
+							redTurn = true;
+						}
+						itemClicked = false;
+						board.Udisplay();
+					}
+				}
+			}
+		}
+	}
+};
+
+var Start = 0;
+var End = 800;
+var BVStart = 200;
+var BVEnd = 600;
+var BHStart = 150;
+var BHEnd = 650;
+
+function commonDisplay()
+{
+	var canvas = document.getElementById('myCanvas');
+	var ctx = canvas.getContext('2d');
+	var capitalR = [10, 300];
+	var capitalB = [680, 300];
+	var rt = document.getElementById("rt");
+	var bt = document.getElementById("bt");
+
+	document.getElementsByTagName('table')[0].style.width = screen.width;
+	ctx.drawImage(rt, capitalR[0], capitalR[1], 100, 100);
+	ctx.drawImage(rs, 10, 10, 100, 100);
+	//boardPos.posArray[0] = [capitalR[0], capitalR[1]];
+
+	ctx.drawImage(bt, capitalB[0], capitalB[1], 100, 100);
+	ctx.drawImage(bs, 700, 10, 100, 100);
+	//boardPos.posArray[31] = [capitalB[0], capitalB[1]];
+
+	ctx.beginPath();
+	ctx.moveTo(200, 0);
+	ctx.lineTo(200, 800);
+	ctx.moveTo(600, 0);
+	ctx.lineTo(600, 800);
+	ctx.moveTo(0, 150);
+	ctx.lineTo(800, 150);
+	ctx.moveTo(0, 650);
+	ctx.lineTo(800, 650);
+	ctx.stroke();
+	ctx.globalCompositeOperation="destination-over";
+	ctx.beginPath();
+
+	for (var i = 0; i < board.nodelist.length; i++) {
+		for (var j = 0; j < board.nodelist[i].neighbor_list.length; j++) {
+			ctx.moveTo(boardPos.posArray[board.nodelist[i].id][0],
+					boardPos.posArray[board.nodelist[i].id][1]);
+			ctx.lineTo(boardPos.posArray[board.nodelist[i].neighbor_list[j].id][0],
+					boardPos.posArray[board.nodelist[i].neighbor_list[j].id][1]);
+		};
+	};
+
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = 'rgba(0, 220, 0, 0.4)';
+	ctx.stroke();
+	ctx.beginPath();
+
+	for(var i = 0; i < 5; i++) {
+		var x = 225;
+		var y = (BVStart + BVEnd) / 2 - 200 + i * 100;
+		ctx.moveTo(capitalR[0] + 100, capitalR[1]);
+		ctx.lineTo(x, y);
+	}
+	ctx.strokeStyle = 'rgba(220, 0, 0, 0.8)';
+	ctx.stroke();
+	ctx.beginPath();
+
+	for(var i = 0; i < 5; i++) {
+		var x = 575;
+		var y = (BVStart + BVEnd) / 2 -200 + i * 100;
+		ctx.moveTo(capitalB[0], capitalB[1]);
+		ctx.lineTo(x, y);
+	}
+	ctx.strokeStyle = 'rgba(0, 0, 220, 0.8)';
+	ctx.stroke();
+	ctx.fillStyle = "green";
+	ctx.font = 'bold italic 50px Times New Roman';
+	ctx.fillText(" GRAPH WARS!", 200, 100);
+	ctx.font = 'bold 30px sans-serif';
+	ctx.fillText("Troops On Board:", 200, 680);
+	ctx.fillStyle = "red";
+	ctx.fillText("Red :" + players[0].numtroops, 350, 720);
+	ctx.fillStyle = "blue";
+	ctx.fillText("Blue:" + players[1].numtroops, 350, 750);
+	ctx.font = 'bold 20px sans-serif';
+
+	if(players[0].numtroops == 0 && boardPos.RposArray[0][4] == false) {
+		ctx.fillStyle = "blue";
+		ctx.fillText("BLUE WON with", 620, 710);
+		ctx.fillText(" score " + players[1].numtroops , 620, 740);
+	} else if(players[1].numtroops == 0 && boardPos.BposArray[0][4] == false) {
+		ctx.fillStyle = "red";
+		ctx.fillText("RED WON with", 620, 710);
+		ctx.fillText(" score " + players[0].numtroops , 620, 740);
+	} else {
+		if(redTurn == true) {
+			ctx.fillStyle = "red";
+			ctx.fillText("Turn : RED ", 620, 720);
+		} else {
+			ctx.fillStyle = "blue";
+			ctx.fillText("Turn : BLUE ", 620, 720);
+		}
+	}
+	return ctx;
+}
+
+function getWinner()
+{
+	if(players[0].numtroops == 0 && boardPos.RposArray[0][4] == false) {
+		return "RED";
+	} else if(players[1].numtroops == 0 && boardPos.BposArray[0][4] == false) {
+		return "BLUE";
+	} else {
+		return "No One";
 	}
 }
 
-/* TODO: review code logic. WHY ARE WE GENERATING ONE CHIP PER NODE???
- * DO WE EVEN NEED CHIPS??? */
-Board.prototype.generate_chips = function(numNodes, max_troops)
+function getWinnerScore()
 {
-	var listOfChips = [];
+	if(getWinner() == "RED") {
+		return players[0].numtroops;
+	} else if(getWinner() == "BLUE") {
+		return players[1].numtroops;
+	} else
+		return 0;
+}
 
-	for(var i = 0; i < numNodes; i++) {
-		var troop = Math.floor( ( Math.random() * max_troops) + 1 );
-		listOfChips.push(troop);
-	}
-	return listOfChips;
-};
-
-var main = function()
+Board.prototype.Udisplay = function()
 {
-	/* TODO: make number of players, size of graph and maximum number of
-	 * troops parameters decided by player */
-	var board = new Board(5, 5);
-	var players = [];
-	// var chips = board.generate_chips(board.nodelist.length, 20);
+	var canvas = document.getElementById('myCanvas');
+	var ctx= canvas.getContext('2d');
+	ctx.clearRect(0, 0, 800, 800);
+	ctx.textBaseline = "middle";
+	ctx.font = 'bold 20px sans-serif';
+	ctx.fillStyle = '#d3d3d3';
+	ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+	ctx.globalCompositeOperation="source-over";
 
-	/* "2 or more, use a for"
-	 *	-- Edgar Dijsktra */
-	for(var i = 0; i < 2; i++)
-		players.push(new Player(i, 50, null, null));
-	/* TODO: get a capital and a list of nodes from the board */
-	board.players = players;
-	/* for each node in graph, create an array of size 2 initialized to 0 */
-	for(var n in board.nodelist)
-		n.troops = Array.apply(null, new Array(2)).map(Number.prototype.valueOf, 0);
-	board.display();
-
-	/* The following random BS. This should all be erased and replaced with
-	 * code that's activated by mouseclics */
-	//	for(var p in players)
-	//		p.place_troops();
-
-	/* while more than one player remaining */
-	while(board.players.length > 1) {
-		/*		for(var p in players)
-				p.movetroops();
-				board.battle();
-				*/
-		break;
+	for(var i = 0; i < 6; i++) {
+		for(var j = 0; j < 5; j++) {
+			ctx.beginPath();
+			var x = Start + i * 70 + 50 + 175;		// x coordinate
+			var y = (BVStart + BVEnd) / 2 -200 + j * 100;	// y coordinate
+			ctx.arc(x, y, boardPos.radius, 0, 2 * Math.PI);
+			ctx.fill();
+		}
 	}
-	if(board.players.length == 1)
-		alert("Player " + board.players[0] + " is king of the world.");
-	else
-		alert("Everyone loses in a war. People die and no one gets anything out of it.");
+	for(var i = 0; i < 2; i++) {
+		for(var j = 0; j < 3; j++) {
+			var x = Start + i * 50 + 50;
+			var y = (BVStart + BVEnd) / 2 + 100 + j * 50;
+			ctx.beginPath();
+			ctx.arc(x, y, boardPos.radius , 0, 2 * Math.PI);
+			ctx.stroke();
+			ctx.beginPath();
+			ctx.arc(x + 650, y, boardPos.radius , 0, 2 * Math.PI);
+			ctx.fill();
+		}
+	}
+	ctx.fillStyle = 'red';
+	for(var i = 0; i < boardPos.RposArray.length; i++) {
+		if(boardPos.RposArray[i][4] == true) {
+			ctx.beginPath();
+			var x = boardPos.RposArray[i][0];
+			var y = boardPos.RposArray[i][1];
+			ctx.arc(x, y, boardPos.radius , 0, 2 * Math.PI);
+			ctx.fillText(players[0].chips[i].toString(), x - 10, y);
+			ctx.stroke();
+		}
+	}
+	ctx.fillStyle = 'blue';
+	for(var i = 0; i < boardPos.BposArray.length; i++) {
+		if(boardPos.BposArray[i][4] == true) {
+			ctx.beginPath();
+			var x = boardPos.BposArray[i][0];
+			var y = boardPos.BposArray[i][1];
+			ctx.arc(x, y, boardPos.radius , 0, 2 * Math.PI);
+			ctx.fillText(players[1].chips[i].toString(), x - 10, y);
+			ctx.stroke();
+		}
+	}
+	commonDisplay();
+}
+
+Board.prototype.display = function()
+{
+	var canvas = document.getElementById('myCanvas');
+	var ctx= canvas.getContext('2d');
+
+	ctx.textBaseline = "middle";
+	ctx.font = 'bold 20px sans-serif';
+	ctx.fillStyle = 'red';
+
+	for(var i = 0; i < 2; i++) {
+		for(var j = 0; j < 3; j++) {
+			var x = Start + i * 50 + 50;			// x coordinate
+			var y = (BVStart + BVEnd) / 2 + 100 + j * 50;	// y coordinate
+
+			ctx.beginPath();
+			ctx.arc(x, y, boardPos.radius , 0, 2 * Math.PI);
+			ctx.fillText(players[0].chips[i * 3 + j].toString(), x - 10, y);
+			ctx.stroke();
+			boardPos.RposArray[i * 3 + j] = [x, y, players[0].chips[i * 3 + j]];
+			boardPos.RposArray[i * 3 + j][4] = true;
+			boardPos.RposArray[i * 3 + j][5] = false;
+			boardPos.RposArray[i * 3 + j][3] = -1;
+		}
+	}
+	ctx.fillStyle = 'blue';
+	for(var i = 0; i < 2; i++) {
+		for(var j = 0; j < 3; j++) {
+			var x = Start + i * 50 + 50 + 650;		// x coordinate
+			var y = (BVStart + BVEnd) / 2 + 100 + j * 50;	// y coordinate
+			var endAngle = 2 * Math.PI;
+
+			ctx.beginPath();
+			ctx.arc(x, y, boardPos.radius, 0, endAngle);
+			ctx.fillText(players[1].chips[i * 3 + j].toString(), x - 10, y);
+			ctx.stroke();
+			boardPos.BposArray[i * 3 + j] = [x, y, players[1].chips[i * 3 + j]];
+			boardPos.BposArray[i * 3 + j][4] = true;
+			boardPos.BposArray[i * 3 + j][5] = false;
+			boardPos.BposArray[i * 3 + j][3] = -1;
+		}
+	}
+	ctx.fillStyle = 'grey';
+	for(var i = 0; i < 6; i++) {
+		for(var j = 0; j < 5; j++) {
+			ctx.beginPath();
+			var x = Start + i * 70 + 50 + 175;		// x coordinate
+			var y = (BVStart + BVEnd) / 2 -200 + j * 100;	// y coordinate
+
+			ctx.arc(x, y, boardPos.radius, 0, 2 * Math.PI);
+			ctx.fill();
+			boardPos.posArray[i * 5 + j] = [x, y];
+		}
+	}
+	commonDisplay();
 }
 

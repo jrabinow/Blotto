@@ -25,7 +25,7 @@ if( !Array.prototype.indexOf ) {
 	};
 }
 
-/* typedef enum :-P :-P :-P 
+/* typedef enum :-P :-P :-P
  * Legacy code from attacker-defender mode, we should maybe just delete this */
 Owner = {
 	DEFENDER : 0,
@@ -49,14 +49,17 @@ function Player(id, numtroops, controlled_nodes, capital)
 	this.available_troops = numtroops;	/* Troops available for placement */
 	this.numtroops = 0;			/* troops present on the board */
 	this.controlled_nodes = controlled_nodes;
+
 	for(var n in controlled_nodes)
 		n.owner = id;
 	this.capital = capital;
+	this.chips = chips;
 }
 
 Player.prototype.place_troops = function(node, troops)
-{	
-	/* TODO: perform some additional checks to see if there aren't too many troops already present on node */
+{
+	/* TODO: perform some additional checks to see if there aren't
+	 * too many troops already present on node */
 	if(node.owner != this.id || troops > this.available_troops) {
 		alert("You cannot place your troops here!");
 		return false;
@@ -67,12 +70,14 @@ Player.prototype.place_troops = function(node, troops)
 	}
 }
 
-/* TODO: review conditions on moving troops (check for correct levels and so on) 
+/* TODO: review conditions on moving troops (check for correct levels and so on)
  * once we've finally decided on a set of rules */
 Player.prototype.movetroops = function(startnode, endnode, numtroops)
 {
-	if(startnode.neighbor_list.indexOf(endnode) == -1 || startnode.troops[this.id] < numtroops) {
-		alert("You cannot move " + numtroops + " troops from node " + startnode.id + " to node " + endnode.id + "!");
+	if(startnode.neighbor_list.indexOf(endnode) == -1 ||
+			startnode.troops[this.id] < numtroops) {
+		alert("You cannot move " + numtroops + " troops from node "
+				+ startnode.id + " to node " + endnode.id + "!");
 		return false;
 	} else {
 		startnode.troops[this.id] -= numtroops;
@@ -81,18 +86,21 @@ Player.prototype.movetroops = function(startnode, endnode, numtroops)
 	}
 }
 
-/* Object-oriented programming is very nice, but there's no need to make this function part of the Board class
+/* Object-oriented programming is very nice, but there's no need to make this
+ * function part of the Board class
  * "Floating" functions are just fine too :) */
 function fullGraphGen(depth, nodes_per_level)
 {
-	//for each level generate the number of nodes per level
-	var lvlNodes = []; //elements of the form [ number of nodes per level, array of nodes in level]
-	for(var i = 0; i <= depth; i++)
-		lvlNodes.push([ nodes_per_level, [] ]);
-
+	var lvlNodes = [];
 	var graph = [];
 	var id = 0;
-	//generate nodes
+
+	// for each level generate the number of nodes per level
+	for(var i = 0; i <= depth; i++)
+		lvlNodes.push([ nodes_per_level, [] ]);
+	// elements of the form [ number of nodes per level, array of nodes in level]
+
+	// generate nodes
 	for(var i = 0; i < lvlNodes.length; i++) {
 		for(var j = 1; j <= lvlNodes[i][0]; j++) {
 			var n = new Node(i, id++);
@@ -101,16 +109,17 @@ function fullGraphGen(depth, nodes_per_level)
 		}
 	}
 
-	/* Sorry for the horrible syntax, when I tried to do for(var n1 in lvlNodes[i][1]) javascript was screwing up */
+	/* Sorry for the horrible syntax, when I tried to do
+	 * for(var n1 in lvlNodes[i][1]) javascript was screwing up */
 	for(var i = 0; i < depth - 1; i++)
 		/* for(var n1 in lvlNodes[i][1]) */
 		for(var n1 = 0; n1 < lvlNodes[i][1].length; n1++) {
-			/* for(var n2 in lvlNodes[i+1][1]) {*/
-			for(var n2 = 0; n2 < lvlNodes[i+1][1].length; n2++) {
+			/* for(var n2 in lvlNodes[i + 1][1]) {*/
+			for(var n2 = 0; n2 < lvlNodes[i + 1][1].length; n2++) {
 				/* n1.neighbor_list.push(n2);
-				 * n2.neighbor_list.push(n1);*/
+				 * n2.neighbor_list.push(n1); */
 				lvlNodes[i][1][n1].neighbor_list.push(lvlNodes[i+1][1][n2]);
-				lvlNodes[i+1][1][n2].neighbor_list.push(lvlNodes[i][1][n1]);
+				lvlNodes[i + 1][1][n2].neighbor_list.push(lvlNodes[i][1][n1]);
 			}
 		}
 
@@ -118,7 +127,7 @@ function fullGraphGen(depth, nodes_per_level)
 		numNeighbors = Math.floor( (Math.random() * graph[i].neighbor_list.length) + 1);
 		/* Choose a random index from current neighbors
 		 * delete node at that index from current neighbors
-		 * Connections are 2 ways => we then delete the current node from the list
+		 * Connections are 2 ways -> we then delete the current node from the list
 		 * of neighbors of the node we just deleted */
 		while(graph[i].neighbor_list.length > numNeighbors) {
 			var unjoin_index = Math.floor(Math.random() * graph[i].neighbor_list.length);
@@ -128,25 +137,26 @@ function fullGraphGen(depth, nodes_per_level)
 		}
 	}
 	return graph;
-	/* TODO: what might be interesting is to select the capitals in this function and return the graph AND
-	 * the list of capitals */
+	/* TODO: what might be interesting is to select the capitals in this
+	 * function and return the graph AND the list of capitals */
 };
 
 function sparseGraphGen(max_depth, max_nodes_per_level)
 {
-	//generate the number of levels
+	var lvlNodes = [];
+	// generate the number of levels
 	var numlvl = Math.floor( (Math.random() * max_depth) + 1 );
+	var graph = [];
+	var id = 0;
 
-	//for each level generate the number of nodes per level
-	var lvlNodes = []; //elements of the form [ number of nodes per level, array of nodes in level]
+	// for each level generate the number of nodes per level
 	for(var i = 0; i <= numlvl; i++) {
 		var numNodes = Math.floor( (Math.random() * max_nodes_per_level) + 1 );
 		lvlNodes.push([ nodes_per_level, [] ]);
+	// elements of the form [ number of nodes per level, array of nodes in level]
 	}
 
-	var graph = [];
-	var id = 0;
-	//generate the number of neighbors, per node
+	// generate the number of neighbors, per node
 	for(var i = 0; i < lvlNodes.length; i++)
 		for(var j = 1; j <= lvlNodes[i][0]; j++) {
 			var n = new Node(i, id++);
@@ -156,19 +166,20 @@ function sparseGraphGen(max_depth, max_nodes_per_level)
 
 	for(var i = 0; i < depth - 1; i++)
 		for(var n1 = 0; n1 < lvlNodes[i][1].length; n1++) {
-			for(var n2 = 0; n2 < lvlNodes[i+1][1].length; n2++) {
-				/* Sorry for the horrible syntax, when I tried to do for(var n1 in lvlNodes...) javascript was screwing up */
+			for(var n2 = 0; n2 < lvlNodes[i + 1][1].length; n2++) {
+				/* Sorry for the horrible syntax, when I tried to
+				 * do for(var n1 in lvlNodes...) javascript was screwing up */
 				lvlNodes[i][1][n1].neighbor_list.push(lvlNodes[i+1][1][n2]);
-				lvlNodes[i+1][1][n2].neighbor_list.push(lvlNodes[i][1][n1]);
+				lvlNodes[i + 1][1][n2].neighbor_list.push(lvlNodes[i][1][n1]);
 			}
 		}
 
-	//pruning
+	// pruning
 	for(var i = 0; i < graph.length; i++) {
 		numNeighbors = Math.floor( (Math.random() * graph[i].neighbor_list.length) + 1);
 		/* Choose a random index from current neighbors
 		 * delete node at that index from current neighbors
-		 * Connections are 2 ways => we then delete the current node from the list
+		 * Connections are 2 ways -> we then delete the current node from the list
 		 * of neighbors of the node we just deleted */
 		while(graph[i].neighbor_list.length > numNeighbors) {
 			var unjoin_index = Math.floor(Math.random() * graph[i].neighbor_list.length);
@@ -199,7 +210,8 @@ Board.prototype.battle = function()
 		var tie = false;
 		/* Find out who owns the node */
 		for(var i = 1; i < this.players.length; i++)
-			if(owner == Owner.NEUTRAL || node.troops[i] > node.troops[owner]) {
+			if(owner == Owner.NEUTRAL ||
+					node.troops[i] > node.troops[owner]) {
 				owner = i;
 				tie = false;
 			} else if(node.troops[i] == node.troops[owner])
@@ -215,7 +227,8 @@ Board.prototype.battle = function()
 					node.troops[i] = 0;
 
 					/* update board to remove players who lost */
-					if(this.players[i].capital == node || this.players[i].numtroops == 0) {
+					if(this.players[i].capital == node ||
+							this.players[i].numtroops == 0) {
 						alert("Player " + this.players[i].id + " lost :(");
 						for(var n in this.players[i].controlled_nodes) {
 							n.owner = owner;
@@ -242,21 +255,25 @@ Board.prototype.generate_chips = function(numNodes, max_troops)
 
 var main = function()
 {
-	/* TODO: make number of players, size of graph and maximum number of troops parameters decided by player */
+	/* TODO: make number of players, size of graph and maximum number of
+	 * troops parameters decided by player */
 	var board = new Board(5, 5);
-	/* "2 or more, use a for"
-	 * 	-- Edgar Dijsktra */
 	var players = [];
-	//var chips = board.generate_chips(board.nodelist.length, 20);
+	// var chips = board.generate_chips(board.nodelist.length, 20);
+
+	/* "2 or more, use a for"
+	 *	-- Edgar Dijsktra */
 	for(var i = 0; i < 2; i++)
-		players.push(new Player(i, 50, null, null));	/* TODO: get a capital and a list of nodes from the board */
+		players.push(new Player(i, 50, null, null));
+	/* TODO: get a capital and a list of nodes from the board */
 	board.players = players;
 	/* for each node in graph, create an array of size 2 initialized to 0 */
 	for(var n in board.nodelist)
 		n.troops = Array.apply(null, new Array(2)).map(Number.prototype.valueOf, 0);
 	board.display();
 
-	/* The following random BS. This should all be erased and replaced with code that's activated by mouseclics */
+	/* The following random BS. This should all be erased and replaced with
+	 * code that's activated by mouseclics */
 	//	for(var p in players)
 	//		p.place_troops();
 
